@@ -6,11 +6,11 @@ const nodemailer = require('nodemailer');
 router.get('', async (req, res) => {
   try {
     const locals = {
-      title: "Blog NodeJS",
+      title: "Hutech Blogs",
       description: "Chia sẻ và cùng học NodeJs",
       userName: req.session.userName || null
     }
-    console.log('User Name in session:', req.session.userName);
+    // console.log('User Name in session:', req.session.userName);
     let perPage = 5; // Số bài viết trên mỗi trang
     let page = req.query.page || 1;
     const data = await Post.aggregate([{ $sort: { createdAt: -1 } }])
