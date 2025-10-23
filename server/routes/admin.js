@@ -244,7 +244,8 @@ router.route('/add-post')
     // **CODE NÀY PHẢI CHỨA LOGIC LƯU BÀI VIẾT BAN ĐẦU CỦA BẠN**
     const newPost = new Post({
       title: req.body.title,
-      body: req.body.body
+      body: req.body.body,
+      userId: req.userId // Lấy userId từ middleware xác thực
     });
 
     await Post.create(newPost);
