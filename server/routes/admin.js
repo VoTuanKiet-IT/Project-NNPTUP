@@ -73,10 +73,10 @@ router.get('/register', async (req, res) => {
 // Đăng ký người dùng mới
 router.post('/register', async (req, res) => {
   try {
-    const { name, username, password } = req.body;
+    const { name, username, password , phone, email} = req.body;
     const hashedPassword = await bcrypt.hash(password, 10); // Mã hóa mật khẩu
     try {
-      await User.create({ name, username, password: hashedPassword });
+      await User.create({ name, username, password: hashedPassword, phone, email });
       res.status(201).render('success', { message: 'Đăng ký thành công' });
     } catch (error) {
       if (error.code === 11000) {
