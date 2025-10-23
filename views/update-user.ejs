@@ -1,0 +1,18 @@
+<h3>Update User Information</h3>
+<form action="/update-user" method="POST">
+
+  <label for="name"><b>Name</b></label>
+  <input type="text" placeholder="Enter Name" name="newName" value="<%= user.name %>">
+
+  <label for="username"><b>Username</b></label>
+  <input type="text" placeholder="Enter Username" name="newUsername" value="<%= user.username %>">
+
+  <label for="password"><b>Password</b></label>
+  <input type="password" placeholder="Enter Password" name="newPassword" value="<%= user.password %>">
+
+  <!-- Trường ẩn để truyền userId -->
+  <input type="hidden" name="userId" value="<%= user._id %>">
+
+  <input type="submit" value="Update" class="btn">
+
+</form>

@@ -1,0 +1,30 @@
+
+<div class="admin-title">
+    <h2>Quản lý người dùng</h2>
+</div>
+
+<ul class="user-list">
+    <% users.forEach(user => { %>
+    <li>
+        <div class="user-info">
+            <h3>Tên: <%= user.name %></h3>
+            <p>Username: <%= user.username %></p>
+            <p>Password cũ: ********</p> 
+        </div>
+        <div class="user-actions">
+            <form id="editForm_<%= user._id %>" action="/edit-user/<%= user._id %>" method="POST"> <!-- Sửa action của form -->
+                <label for="name">Tên mới:</label>
+                <input type="text" name="name" placeholder="Tên mới">
+
+                <label for="username">Username mới:</label>
+                <input type="text" name="username" placeholder="Username mới">
+
+                <label for="password">Password mới:</label>
+                <input type="password" name="password" placeholder="Password mới">
+
+                <input type="submit" value="Lưu" class="btn">
+            </form>
+        </div>
+    </li>
+    <% }) %>
+</ul>

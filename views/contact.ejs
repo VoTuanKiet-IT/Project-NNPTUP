@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên hệ với chúng tôi</title>
+</head>
+<body>
+    <h1>Liên hệ với chúng tôi</h1>
+    <% if (successMessage) { %>
+        <p><%= successMessage %></p>
+    <% } else if (errorMessage) { %>
+        <p><%= errorMessage %></p>
+    <% } %>
+    <form action="/contact/send" method="post">
+        <label for="name">Họ Tên:</label>
+        <input type="text" id="name" name="name" required><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+        <label for="message">Nội dung tin:</label><br>
+        <textarea id="message" name="message" rows="4" cols="50" required></textarea><br>
+        <button type="submit">Gửi</button>
+    </form>
+</body>
+</html>

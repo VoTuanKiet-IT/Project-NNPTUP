@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sửa Post</title>
+</head>
+<body>
+
+<a href="/admin">&larr; Trở lại</a>
+<div class="admin-title">
+    <h2>Xem và Sửa Post</h2>
+
+    <form id="deleteForm" action="/delete-post/<%= data._id %>?_method=DELETE" method="POST">
+        <input type="button" value="Xóa Post" class="btn-delete btn" onclick="confirmDelete()">
+    </form>
+
+</div>
+
+<form id="editForm" action="/edit-post/<%= data._id %>?_method=PUT" method="POST" onsubmit="showUpdateSuccessMessage()">
+
+    <label for="title"><b>Tiêu đề</b></label>
+    <input type="text" placeholder="Post Title" name="title" value="<%= data.title %>">
+
+    <label for="body"><b>Nội dung</b></label>
+    <textarea name="body" cols="50" rows="10"><%= data.body %></textarea>
+
+    <input type="submit" value="Cập nhật" class="btn">
+
+</form>
+
+<div id="updateSuccessMessage" style="display: none; color: green;">
+    Cập nhật thành công! Đang trở lại dashboard...
+</div>
+
+<script>
+    function confirmDelete() {
+        if (confirm("Bạn có chắc muốn xóa post này?")) {
+            document.getElementById("deleteForm").submit();
+        }
+    }
+
+    function reloadDashboard() {
+        window.location.href = "/dashboard";
+    }
+
+    function showUpdateSuccessMessage() {
+        document.getElementById("updateSuccessMessage").style.display = "block";
+        setTimeout(reloadDashboard, 5000);
+    }
+</script>
+
+</body>
+</html>

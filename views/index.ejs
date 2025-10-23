@@ -1,0 +1,35 @@
+<div class="author">
+  <h1 class="author__body">Xin chào. Đây là web blog chia sẻ kiến thức về NodeJS</h1>
+  <p class="author__body">Chúc các bạn học tập vui vẻ</p>
+</div>
+<img src="/img/banner.jpg" alt="Hình ảnh lỗi" class="hero-image" width="981" height="528">
+
+<section class="articles">
+  <h2 class="articles__heading">Bài viết mới nhất</h2>
+  <ul class="article-ul">
+      <% data.forEach(post => { %>
+      <li>
+          <a href="/post/<%= post._id %>">
+              <span><%= post.title %></span>
+              <span class="article-list__date"><%= post.createdAt.toDateString() %></span>
+          </a>
+      </li>
+      <% }) %>
+  </ul>
+
+  <nav class="pagination">
+    <% if (current > 1) { %>
+    <a class="pagination__link" href="?page=<%= parseInt(current) - 1 %>">&lt; Bài viết cũ hơn</a>
+    <% } %>
+    <% if (nextPage) { %>
+    <a class="pagination__link" href="?page=<%= parseInt(current) + 1 %>">Bài viết mới hơn &gt;</a>
+    <% } %>
+    <ul class="pagination__list">
+        <% for(let i = 1; i <= totalPages; i++) { %>
+        <li class="pagination__item">
+            <a class="pagination__page-link" href="?page=<%= i %>"><%= i %></a>
+        </li>
+        <% } %>
+    </ul>
+</nav>
+</section>
