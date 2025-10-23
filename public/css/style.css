@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
 :root {
   --black: #1c1c1c;
@@ -13,11 +13,10 @@
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   color: var(--black);
   font-size: var(--font-size-base);
-  background-color: #FAF5EE;
-  background-image: url("/img/img-noise-361x370.png");
+  background: #dbdbdb;
   margin: 0;
 }
 
@@ -32,7 +31,7 @@ input[type="password"],
 input[type="search"],
 select,
 textarea {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
   display: block;
   box-sizing: border-box;
@@ -98,7 +97,7 @@ img {
   .header {
     grid-template-columns: auto 1fr auto;
     grid-template-areas: 
-    "logo menu button";
+    "logo menu button account";
   }
 }
 
@@ -168,6 +167,21 @@ img {
 .header__nav ul a:hover {
   text-decoration: underline;
 }
+
+.header__account {
+  display: flex;
+  justify-content: end;
+  grid-area: account;
+}
+
+.header__account > a {
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--black);
+  font-size: 1rem;
+}
+
+
 
 /* Author - HomePage */
 .author {
