@@ -25,7 +25,8 @@ const authMiddleware = async (req, res, next) => {
         // **2. KIỂM TRA QUYỀN HẠN (ROLE/AUTHORIZATION)**
 
         if (decoded.role !== 'admin') {
-            return res.status(403).render('error', { message: 'Cấm truy cập: Bạn không có quyền Admin.' });
+          res.redirect('/dashboard');
+            // return res.status(403).render('error', { message: 'Cấm truy cập: Bạn không có quyền Admin.' });
         }
         next(); 
         
@@ -107,16 +108,16 @@ router.post('/login', async (req, res) => {
     try {
       const { username, password } = req.body;
       const user = await User.findOne({ username });
-      console.log('--- Yêu cầu Đăng nhập ---');
-      console.log(`1. Tên người dùng nhập: ${username}`);
-      console.log(`2. Mật khẩu nhập: ${password}`);
+      // console.log('--- Yêu cầu Đăng nhập ---');
+      // console.log(`1. Tên người dùng nhập: ${username}`);
+      // console.log(`2. Mật khẩu nhập: ${password}`);
       
       if (!user) {
           console.log('3. LỖI: Không tìm thấy người dùng.');
           return res.status(401).render('error', { message: 'Thông tin đăng nhập không hợp lệ' });
       }
-      console.log(`3. User tìm thấy: ${user.username}`);
-      console.log(`4. Mật khẩu băm trong DB: ${user.password}`); 
+      // console.log(`3. User tìm thấy: ${user.username}`);
+      // console.log(`4. Mật khẩu băm trong DB: ${user.password}`); 
       const isPasswordValid = await bcrypt.compare(password, user.password);
       // ...
       console.log('5. THÀNH CÔNG:');
@@ -133,6 +134,8 @@ router.post('/login', async (req, res) => {
       } else {
           console.log('5. THÀNH CÔNG: Mật khẩu hợp lệ.');
           req.session.userName = user.name;
+          req.session.userId = user._id;
+          // console.log(`7. Lưu session: userName = ${req.session.userName}, userId = ${req.session.userId}`);
           if (user.role === 'admin') {
               res.redirect('/admin');
           } else {

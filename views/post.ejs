@@ -1,2 +1,99 @@
 <h1><%= data.title %></h1>
+<div class="save-post-container">
+    <% if (userName) { %>
+        <form id="savePostForm" action="/post/save" method="POST">
+            <input type="hidden" name="postId" value="<%= data._id %>">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>"> <button type="submit" class="btn btn-primary" id="savePostBtn">
+                Lưu Bài Viết
+            </button>
+            <span id="saveMessage" style="color: green; margin-left: 10px; display: none;">Đã lưu!</span>
+        </form>
+    <% } else { %>
+        <p>Vui lòng đăng nhập để lưu bài viết.</p>
+    <% } %>
+</div>
+<hr>
 <article class="article"><%= data.body %></article>
+
+<section class="comments-section">
+    <h3 class="comments-section__heading">Bình Luận <%= comments.length %></h3>
+
+    <!-- 1. KHU VỰC HIỂN THỊ DANH SÁCH BÌNH LUẬN (PHÍA TRÊN FORM INPUT) -->
+    <div class="comment-list">
+        <% if (comments && comments.length > 0) { %>
+            <% comments.forEach(comment => { %>
+                <div class="comment-item">
+                    <p class="comment-user">
+                        <strong><%= comment.userId.name || 'Người dùng ẩn danh' %></strong> 
+                        <span class="comment-date"> - <%= comment.createdAt.toLocaleDateString('vi-VN') %></span>
+                    </p>
+                    <p class="comment-content"><%= comment.content %></p>
+                </div>
+            <% }); %>
+
+        <% } else { %>
+            <p>Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+        <% } %>
+    </div>
+    <% if (userId) { %>
+        <hr>
+        <h4>Thêm Bình Luận Mới</h4>
+        <form action="/comment/add" method="POST" class="comment-form">
+            <input type="hidden" name="postId" value="<%= data._id %>">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>"> 
+            
+            <div class="form-group">
+                <textarea name="content" rows="4" placeholder="Viết bình luận của bạn tại đây..." required class="form-control"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Gửi Bình Luận</button>
+        </form>
+    <% } else { %>
+        <p class="login-prompt">Vui lòng <a href="/login">đăng nhập</a> để bình luận.</p>
+    <% } %>
+</section>
+
+<script>
+    document.getElementById('savePostForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Ngăn form submit thông thường
+
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json().then(json => ({
+            status: response.status,
+            body: json
+        })))
+        .then(res => {
+            const btn = document.getElementById('savePostBtn');
+            
+            if (res.status === 201 || res.body.status === 'saved') {
+                // Bài viết đã được lưu thành công
+                btn.textContent = 'Đã Lưu';
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-primary');
+                alert(res.body.message);
+            } else if (res.body.status === 'unsaved') {
+                // Bài viết đã được gỡ
+                btn.textContent = 'Lưu Bài Viết';
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-primary');
+                alert(res.body.message);
+            } else {
+                // Lỗi 401 hoặc lỗi khác
+                alert(res.body.message || 'Lỗi không xác định.');
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi AJAX:', error);
+            alert('Lỗi kết nối hoặc server.');
+        });
+    });
+</script>

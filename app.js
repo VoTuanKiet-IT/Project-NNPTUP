@@ -9,6 +9,7 @@ const MongoStore = require('connect-mongo');
 const connectDB = require('./server/config/db'); // db.js
 const { isActiveRoute } = require('./server/helpers/routeHelpers');
 const flash = require('express-flash');
+const csrf = require('csurf');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,7 +34,16 @@ const startServer = async () => {
         store: MongoStore.create({
             mongoUrl: process.env.MONGODB_URI, // Kết nối sẽ ổn định hơn
         }),
-    }));
+    }));    
+    app.use(csrf({ cookie: true })); // Thiết lập csurf
+    app.use((req, res, next) => {
+        res.locals.csrfToken = req.csrfToken();
+        // Nếu req.session.userName tồn tại, gán nó vào res.locals.userName
+        res.locals.userName = req.session.userName || null;
+        res.locals.userId = req.session.userId || null;
+        res.locals.email = req.session.email || null;
+        next(); // Chuyển sang middleware hoặc route tiếp theo
+    });
 
     app.use(express.static('public'));
     app.use(expressLayout);

@@ -29,14 +29,22 @@
     </nav>
 
     
+   <header>
+    <!-- Các thành phần điều hướng khác ở đây -->
     <div class="header__account">
-        <% if (!locals.userName) { %>
-        <a href="/login" class="login-link">
-            Đăng nhập
-        </a>
-        <% } else { %>  <a href="/admin" class="admin-link">
-            <%= locals.userName %>
-        </a>
+        <% if (!userName) { %>
+            <a href="/login" class="login-link">
+                Đăng nhập
+            </a>
+        <% } else { %>
+            <a href="/admin" class="admin-link">
+                <%= userName %>
+            </a>
+            <!-- Tùy chọn: Thêm nút Đăng xuất -->
+            <!-- <a href="/logout" class="logout-link">
+                (Đăng xuất)
+            </a> -->
         <% } %>
     </div>
+</header>
 </header>

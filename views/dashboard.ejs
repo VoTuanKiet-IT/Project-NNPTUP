@@ -1,0 +1,38 @@
+<section class="articles">
+    <h2 class="articles__heading">Thông tin người dùng</h2>
+    <p>Xin chào, <%= userName %>!</p> 
+    <a href="/logout" class="logout-link" title="Đăng xuất khỏi hệ thống">Đăng xuất</a>
+    <!-- <p>Email , <%= email %></p> -->
+</section>
+
+
+<section class="articles">
+    <h2 class="articles__heading">Bài viết đã lưu</h2>
+    <ul class="article-ul">
+        <% fillerSaved.forEach(saved => { %>
+        <li>
+            <a href="/post/<%= saved.postId._id %>"> 
+                
+                <span class="saved.title"><%= saved.postId.title %></span>
+                
+                <span class="article-list_date"><%= saved.createdAt.toDateString() %></span>
+            </a>
+        </li>
+        <% }); %>
+    </ul>
+    <nav class="pagination">
+        <% if (current > 1) { %>
+        <a class="pagination__link" href="?page=<%= parseInt(current) - 1 %>">&lt; Bài viết cũ hơn</a>
+        <% } %>
+        <% if (nextPage) { %>
+        <a class="pagination__link" href="?page=<%= parseInt(current) + 1 %>">Bài viết mới hơn &gt;</a>
+        <% } %>
+        <ul class="pagination__list">
+            <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="pagination__item">
+                <a class="pagination__page-link" href="?page=<%= i %>"><%= i %></a>
+            </li>
+            <% } %>
+        </ul>
+    </nav>
+</section>

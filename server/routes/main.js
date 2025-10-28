@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
+const ViewLogs = require('../models/ViewLogs');
+const Saved = require('../models/Saved');
+const Comment = require('../models/Comment');
 const nodemailer = require('nodemailer');
 
 router.get('', async (req, res) => {
@@ -8,22 +11,31 @@ router.get('', async (req, res) => {
     const locals = {
       title: "Hutech Blogs",
       description: "Chia sẻ và cùng học NodeJs",
-      userName: req.session.userName || null
     }
-    // console.log('User Name in session:', req.session.userName);
+    console.log(`Info session: userName = ${req.session.userName}, userId = ${req.session.userId}`);
+    console.log(`Rendering home page with userId: ${res.locals.userId}`);
+    console.log(`Rendering home page with userName: ${res.locals.userName}`);
     let perPage = 5; // Số bài viết trên mỗi trang
     let page = req.query.page || 1;
     const data = await Post.aggregate([{ $sort: { createdAt: -1 } }])
       .skip(perPage * page - perPage)
       .limit(perPage)
-      .exec();
+      .exec();  
     const count = await Post.countDocuments({});
     const totalPages = Math.ceil(count / perPage); // Tính số trang dựa trên số lượng bài viết
     const nextPage = parseInt(page) + 1;
     const hasNextPage = nextPage <= totalPages;
+
+    const listviewlog = await ViewLogs.find({userId: req.session.userId})
+      .sort({ createdAt: -1 })
+      .populate('postId') // Tham chiếu đến trường postId
+      .limit(perPage)
+      .exec();
+
     res.render('index', {
       locals,
       data,
+      listviewlog,
       current: page,
       totalPages, // Truyền totalPages vào template
       nextPage: hasNextPage ? nextPage : null,
@@ -34,24 +46,164 @@ router.get('', async (req, res) => {
   }
 });
 
+router.get('/dashboard', async (req, res) => {
+    try {
+        const locals = {
+            title: "Hutech Blogs",
+            description: "Chia sẻ và cùng học NodeJs",
+        }
+        let perPage = 5; 
+        
+        console.log(`Rendering home page with userId: ${res.locals.userId}`);
+        console.log(`Rendering home page with userName: ${res.locals.userName}`);
+        
+        const fillerSaved = await Saved.find({userId: res.locals.userId})
+            .sort({ createdAt: -1 })
+            .limit(perPage) 
+            .populate('postId') 
+            .exec();
+
+        console.log(`Found ${fillerSaved.length} saved posts for userId: ${req.session.userId}`);
+        let page = req.query.page || 1;
+   
+        const count = await Post.countDocuments({});
+        const totalPages = Math.ceil(count / perPage); // Tính số trang dựa trên số lượng bài viết
+        const nextPage = parseInt(page) + 1;
+        const hasNextPage = nextPage <= totalPages;
+
+        
+        res.render('dashboard', {
+            locals,
+            fillerSaved,
+            current: page,
+            totalPages, // Truyền totalPages vào template
+            nextPage: hasNextPage ? nextPage : null,
+            currentRoute: '/dashboard'
+        });
+    } catch (error) {
+        console.error('Lỗi khi vào user:', error);
+        res.status(500).json({ message: 'Lỗi server nội bộ.' });
+    }
+});
 
 router.get('/post/:id', async (req, res) => {
-  try {
-    let slug = req.params.id;
-    const data = await Post.findById({ _id: slug });
-    const locals = {
-      title: data.title,
-      description: "Chia sẻ và cùng học NodeJs",
+    try {
+        let slug = req.params.id;
+        const data = await Post.findById({ _id: slug });
+        const locals = {
+            title: data.title,
+            description: "Chia sẻ và cùng học NodeJs",
+        }
+        const comments = await Comment.find({ postId: data._id })
+            .sort({ createdAt: -1 })
+            .populate('userId') 
+            .exec();
+        
+        if (data) {
+            const fillerviewlos = await ViewLogs.find({ postId: data._id, userId: req.session.userId });
+            if (fillerviewlos.length === 0 && req.session.userId) {
+                const viewLog = new ViewLogs({
+                    postId: data._id,
+                    userId: req.session.userId,
+                    createdAt: Date.now()
+                });
+                console.log('userId in session:', req.session.userId);
+                console.log('Logging view for post:', viewLog.postId);
+                await viewLog.save();
+            } else if (fillerviewlos.length > 0 && req.session.userId) {
+                fillerviewlos[0].createdAt = Date.now();
+                await fillerviewlos[0].save();
+            }
+        }
+        return res.render('post', {
+            locals,
+            data,
+            comments,
+            currentRoute: `/post/${slug}`
+        });
+        
+    } catch (error) {
+        console.error('Lỗi khi tải trang bài viết:', error);
+        return res.status(500).send('Lỗi server nội bộ. Vui lòng kiểm tra console log.'); 
     }
-    res.render('post', {
-      locals,
-      data,
-      currentRoute: `/post/${slug}`
-    });
-  } catch (error) {
-    console.log(error);
-  }
 });
+
+router.post('/post/save', async (req, res) => {
+    const userId = req.session.userId;
+    const postId = req.body.postId;
+
+    if (!userId) {
+        return res.status(401).json({ message: 'Vui lòng đăng nhập để lưu bài viết.' });
+    }
+    
+    if (!postId) {
+        // Kiểm tra postId có được gửi lên không
+        return res.status(400).json({ message: 'Thiếu Post ID.' });
+    }
+
+    try {
+        // 2. Kiểm tra bài viết đã được lưu chưa (để tránh trùng lặp)
+        const existingSave = await Saved.findOne({ 
+            userId: userId, 
+            postId: postId 
+        });
+
+        if (existingSave) {
+            // Nếu đã tồn tại, xóa (Toggle chức năng lưu)
+            await Saved.deleteOne({ _id: existingSave._id });
+            return res.status(200).json({ 
+                status: 'unsaved',
+                message: 'Bài viết đã được gỡ khỏi danh sách lưu.' 
+            });
+        }
+        const newSave = new Saved({
+            userId: userId,
+            postId: postId,
+            createdAt: Date.now()
+        });
+        await newSave.save();
+        
+        res.status(201).json({ 
+            status: 'saved',
+            message: 'Bài viết đã được lưu thành công!' 
+        });
+    } catch (error) {
+        console.error('Lỗi khi lưu bài viết:', error);
+        res.status(500).json({ message: 'Lỗi server nội bộ.' });
+    }
+});
+
+router.post('/comment/add', async (req, res) => {
+    const userId = req.session.userId;
+    const { postId, content } = req.body; 
+    if (!userId) {
+        return res.status(401).send('Vui lòng đăng nhập để bình luận.');
+    }
+        if (!postId || !content) {
+        return res.status(400).send('Thiếu Post ID hoặc nội dung bình luận.');
+    }
+
+    try {
+        const newComment = new Comment({
+            postId: postId,
+            userId: userId,
+            content: content,
+            createdAt: Date.now()
+        });
+        console.log(`Saving comment for postId: ${newComment.postId} by userId: ${newComment.userId} with content: ${newComment.content}`);
+        await newComment.save();
+        
+        res.redirect(`/post/${postId}`);
+                                        
+    } catch (error) {
+        console.error('Lỗi khi lưu bình luận:', error);
+        res.status(500).send('Lỗi server nội bộ khi lưu bình luận. Vui lòng kiểm tra log.');
+    }
+});
+
+
+
+
 
 router.post('/search', async (req, res) => {
   try {
@@ -186,6 +338,10 @@ router.post('/contact/send', async (req, res) => {
     });
   }
 });
+
+
+
+
 
 module.exports = router;
 

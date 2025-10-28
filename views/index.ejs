@@ -5,31 +5,42 @@
 <!-- <img src="/img/banner.jpg" alt="Hình ảnh lỗi" class="hero-image" width="981" height="528"> -->
 
 <section class="articles">
-  <h2 class="articles__heading">Bài viết mới nhất</h2>
-  <ul class="article-ul">
-      <% data.forEach(post => { %>
-      <li>
-          <a href="/post/<%= post._id %>">
-              <span><%= post.title %></span>
-              <span class="article-list__date"><%= post.createdAt.toDateString() %></span>
-          </a>
-      </li>
-      <% }) %>
-  </ul>
-
-  <nav class="pagination">
-    <% if (current > 1) { %>
-    <a class="pagination__link" href="?page=<%= parseInt(current) - 1 %>">&lt; Bài viết cũ hơn</a>
-    <% } %>
-    <% if (nextPage) { %>
-    <a class="pagination__link" href="?page=<%= parseInt(current) + 1 %>">Bài viết mới hơn &gt;</a>
-    <% } %>
-    <ul class="pagination__list">
-        <% for(let i = 1; i <= totalPages; i++) { %>
-        <li class="pagination__item">
-            <a class="pagination__page-link" href="?page=<%= i %>"><%= i %></a>
+    <h2 class="articles__heading">Bài viết mới nhất</h2>
+    <ul class="article-ul">
+        <% data.forEach(post => { %>
+        <li>
+            <a href="/post/<%= post._id %>">
+                <span><%= post.title %></span>
+                <span class="article-list__date"><%= post.createdAt.toDateString() %></span>
+            </a>
         </li>
-        <% } %>
+        <% }) %>
     </ul>
-</nav>
+    <nav class="pagination">
+        <% if (current > 1) { %>
+        <a class="pagination__link" href="?page=<%= parseInt(current) - 1 %>">&lt; Bài viết cũ hơn</a>
+        <% } %>
+        <% if (nextPage) { %>
+        <a class="pagination__link" href="?page=<%= parseInt(current) + 1 %>">Bài viết mới hơn &gt;</a>
+        <% } %>
+        <ul class="pagination__list">
+            <% for(let i = 1; i <= totalPages; i++) { %>
+            <li class="pagination__item">
+                <a class="pagination__page-link" href="?page=<%= i %>"><%= i %></a>
+            </li>
+            <% } %>
+        </ul>
+    </nav>
+</section>
+
+<section class="articles view-logs">
+    <h2 class="view-logs__heading articles__heading">Lịch sử xem bài viết gần đây</h2>
+    <ul class="view-logs__list article-ul">
+        <% listviewlog.forEach(log => { %>  <li class="view-logs__item">
+            <a href="/post/<%= log.postId._id %>">
+                <span class="listviewlog.postTitle"><%= log.postId.title %></span>
+                <span class="view-logs__date article-list__date"><%= log.createdAt.toDateString() %></span>
+            </a>
+        </li>
+        <% }); %> </ul>
 </section>
