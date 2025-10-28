@@ -65,7 +65,9 @@ router.get('/register', async (req, res) => {
       title: "Đăng ký",
       description: "Đăng ký để tiếp tục"
     }
-    res.render('register', { locals });
+    res.render('register', {
+      csrfToken: req.csrfToken(),
+       locals });
   } catch (error) {
     res.status(500).render('error', { message: 'Lỗi máy chủ nội bộ' });
   }
@@ -98,7 +100,10 @@ router.get('/login', async (req, res) => {
       title: "Đăng nhập",
       description: "Đăng nhập để tiếp tục"
     }
-    res.render('login', { locals });
+    res.render('login', { 
+      csrfToken: req.csrfToken(),
+      locals 
+    });
   } catch (error) {
     res.status(500).render('error', { message: 'Lỗi máy chủ nội bộ' });
   }
