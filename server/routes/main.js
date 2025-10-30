@@ -4,6 +4,7 @@ const Post = require('../models/Post');
 const ViewLogs = require('../models/ViewLogs');
 const Saved = require('../models/Saved');
 const Comment = require('../models/Comment');
+const Star = require('../models/Star');
 const nodemailer = require('nodemailer');
 
 
@@ -91,6 +92,23 @@ router.get('/post/:id', async (req, res) => {
     try {
         let slug = req.params.id;
         const data = await Post.findById({ _id: slug });
+        const fillerRating = await Star.find({ postId: data._id })
+            .populate('postId')
+            .populate('userId')
+            .exec();    
+        let avgRating = 0; 
+        let userRating = 0;
+        console.log(`Found ${fillerRating.length} ratings for postId: ${data._id}`);
+        if (fillerRating.length != 0) {
+          avgRating = (fillerRating.reduce((sum, rating) => sum + rating.numbStar, 0) / fillerRating.length).toFixed(1);        }
+        const userStar = await Star.find({ postId: data._id, userId: req.session.userId })
+                .exec();
+        if (req.session.userId) {
+            const userStar = await Star.findOne({ postId: data._id, userId: req.session.userId });
+            if (userStar) {
+                userRating = userStar.numbStar;
+            }
+        }
         const locals = {
             title: data.title,
             description: "Chia sẻ và cùng học NodeJs",
@@ -119,6 +137,8 @@ router.get('/post/:id', async (req, res) => {
         return res.render('post', {
             locals,
             data,
+            avgRating,
+            userRating,
             comments,
             currentRoute: `/post/${slug}`
         });
@@ -202,7 +222,42 @@ router.post('/comment/add', async (req, res) => {
     }
 });
 
+router.post('/post/rate', async (req, res) => {
+    const userId = req.session.userId;
+    const { postId, numbStar } = req.body;
 
+    if (!userId) {
+        return res.status(401).json({ status: 'error', message: 'Vui lòng đăng nhập để đánh giá.' });
+    }
+    if (!postId || !numbStar || numbStar < 1 || numbStar > 5) {
+        return res.status(400).json({ status: 'error', message: 'Dữ liệu đánh giá không hợp lệ.' });
+    }
+
+    try {
+        // Kiểm tra xem người dùng đã đánh giá bài viết này chưa
+        const existingRating = await Star.findOne({ postId: postId, userId: userId });
+
+        if (existingRating) {
+            // Nếu đã tồn tại, CẬP NHẬT đánh giá
+            existingRating.numbStar = numbStar;
+            existingRating.updatedAt = Date.now();
+            await existingRating.save();
+            return res.status(200).json({ status: 'success', message: `Đã cập nhật đánh giá thành ${numbStar} sao.` });
+        } else {
+            // Nếu chưa tồn tại, TẠO MỚI đánh giá
+            const newRating = new Star({
+                postId: postId,
+                userId: userId,
+                numbStar: numbStar
+            });
+            await newRating.save();
+            return res.status(201).json({ status: 'success', message: `Cảm ơn bạn đã đánh giá ${numbStar} sao!` });
+        }
+    } catch (error) {
+        console.error('Lỗi khi lưu đánh giá sao:', error);
+        return res.status(500).json({ status: 'error', message: 'Lỗi server nội bộ khi lưu đánh giá.' });
+    }
+});
 
 
 
@@ -224,6 +279,7 @@ router.post('/search', async (req, res) => {
     res.render("search", {
       data,
       locals,
+      csrfToken: req.csrfToken(),
       currentRoute: '/'
     });
   } catch (error) {

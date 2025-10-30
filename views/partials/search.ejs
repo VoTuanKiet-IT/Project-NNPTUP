@@ -1,6 +1,8 @@
 <div class="searchBar">
   <div class="container">
     <form action="/search" method="POST" class="search__form" role="search">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
       <input 
         type="search"
         aria-label="Seach"

@@ -9,7 +9,7 @@ const StarSchema = new Schema({
     required: true
   },
   numbStar: {
-    type: int,
+    type: Number,
     default: 0,
     required: true
   },

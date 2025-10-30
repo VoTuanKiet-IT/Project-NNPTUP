@@ -1,24 +1,49 @@
 <h1><%= data.title %></h1>
-<div class="save-post-container">
-    <% if (userName) { %>
-        <form id="savePostForm" action="/post/save" method="POST">
-            <input type="hidden" name="postId" value="<%= data._id %>">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>"> <button type="submit" class="btn btn-primary" id="savePostBtn">
-                Lưu Bài Viết
-            </button>
-            <span id="saveMessage" style="color: green; margin-left: 10px; display: none;">Đã lưu!</span>
-        </form>
-    <% } else { %>
-        <p>Vui lòng đăng nhập để lưu bài viết.</p>
-    <% } %>
+<div class="post-meta">
+    <div class="avg-rating-display">
+        Đánh giá trung bình: <strong><%= avgRating || 'N/A' %> / 5</strong>
+    </div>
+
+    <section class="rating-section">
+        <% if (userId) { %>
+            <h4>Đánh giá của bạn:</h4>
+            <div class="star-rating" id="starRatingSystem" data-post-id="<%= data._id %>">
+                <% for (let i = 1; i <= 5; i++) { %>
+                    <span class="star <%= i <= userRating ? 'selected' : '' %>" data-value="<%= i %>">&#9733;</span>
+                <% } %>
+                <span id="currentRatingValue" style="margin-left: 10px;">
+                    (<%= userRating %> sao)
+                </span>
+                <span id="ratingMessage" style="color: green; margin-left: 10px; display: none;"></span>
+            </div>
+        <% } else { %>
+            <p>Vui lòng <a href="/login">đăng nhập</a> để đánh giá bài viết này.</p>
+        <% } %>
+    </section>
+
+    <div class="save-post-container">
+        <% if (userName) { %>
+            <form id="savePostForm" action="/post/save" method="POST">
+                <input type="hidden" name="postId" value="<%= data._id %>">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>"> 
+                <button type="submit" class="btn btn-primary" id="savePostBtn">
+                    Lưu Bài Viết
+                </button>
+                <span id="saveMessage" style="color: green; margin-left: 10px; display: none;">Đã lưu!</span>
+            </form>
+        <% } else { %>
+            <p>Vui lòng đăng nhập để lưu bài viết.</p>
+        <% } %>
+    </div>
 </div>
+
 <hr>
+
 <article class="article"><%= data.body %></article>
 
 <section class="comments-section">
-    <h3 class="comments-section__heading">Bình Luận <%= comments.length %></h3>
+    <h3 class="comments-section__heading">Bình Luận (<%= comments.length %>)</h3>
 
-    <!-- 1. KHU VỰC HIỂN THỊ DANH SÁCH BÌNH LUẬN (PHÍA TRÊN FORM INPUT) -->
     <div class="comment-list">
         <% if (comments && comments.length > 0) { %>
             <% comments.forEach(comment => { %>
@@ -35,6 +60,7 @@
             <p>Chưa có bình luận nào. Hãy là người đầu tiên!</p>
         <% } %>
     </div>
+
     <% if (userId) { %>
         <hr>
         <h4>Thêm Bình Luận Mới</h4>
@@ -51,49 +77,138 @@
         <p class="login-prompt">Vui lòng <a href="/login">đăng nhập</a> để bình luận.</p>
     <% } %>
 </section>
-
 <script>
-    document.getElementById('savePostForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Ngăn form submit thông thường
+// --- LOGIC LƯU BÀI VIẾT (Đã có trong prompt) ---
+document.getElementById('savePostForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Ngăn form submit thông thường
 
-        const form = e.target;
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
 
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json().then(json => ({
-            status: response.status,
-            body: json
-        })))
-        .then(res => {
-            const btn = document.getElementById('savePostBtn');
-            
-            if (res.status === 201 || res.body.status === 'saved') {
-                // Bài viết đã được lưu thành công
-                btn.textContent = 'Đã Lưu';
-                btn.classList.add('btn-success');
-                btn.classList.remove('btn-primary');
-                alert(res.body.message);
-            } else if (res.body.status === 'unsaved') {
-                // Bài viết đã được gỡ
-                btn.textContent = 'Lưu Bài Viết';
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-primary');
-                alert(res.body.message);
-            } else {
-                // Lỗi 401 hoặc lỗi khác
-                alert(res.body.message || 'Lỗi không xác định.');
-            }
-        })
-        .catch(error => {
-            console.error('Lỗi AJAX:', error);
-            alert('Lỗi kết nối hoặc server.');
-        });
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json().then(json => ({
+        status: response.status,
+        body: json
+    })))
+    .then(res => {
+        const btn = document.getElementById('savePostBtn');
+        
+        if (res.status === 201 || res.body.status === 'saved') {
+            // Bài viết đã được lưu thành công
+            btn.textContent = 'Đã Lưu';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-primary');
+            alert(res.body.message);
+        } else if (res.body.status === 'unsaved') {
+            // Bài viết đã được gỡ
+            btn.textContent = 'Lưu Bài Viết';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+            alert(res.body.message);
+        } else {
+            alert(res.body.message || 'Lỗi không xác định.');
+        }
+    })
+    .catch(error => {
+        console.error('Lỗi AJAX:', error);
+        alert('Lỗi kết nối hoặc server.');
     });
+});
+
+
+// --- LOGIC ĐÁNH GIÁ SAO (MỚI/QUAN TRỌNG) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const ratingContainer = document.getElementById('starRatingSystem');
+    if (!ratingContainer) return; // Thoát nếu người dùng chưa đăng nhập (không có container)
+    
+    const postId = ratingContainer.dataset.postId;
+    const stars = ratingContainer.querySelectorAll('.star');
+    const message = document.getElementById('ratingMessage');
+
+    // Sự kiện HOVER (Làm nổi bật sao)
+    ratingContainer.addEventListener('mouseover', (e) => {
+        if (e.target.classList.contains('star')) {
+            const hoverValue = parseInt(e.target.dataset.value);
+            stars.forEach(star => {
+                const starValue = parseInt(star.dataset.value);
+                if (starValue <= hoverValue) {
+                    star.classList.add('hover');
+                } else {
+                    star.classList.remove('hover');
+                }
+            });
+        }
+    });
+
+    ratingContainer.addEventListener('mouseout', () => {
+        stars.forEach(star => star.classList.remove('hover'));
+    });
+
+    // Sự kiện CLICK (Gửi đánh giá qua API)
+    ratingContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('star')) {
+            const rating = parseInt(e.target.dataset.value);
+            
+            // Lấy CSRF token từ hidden field trong form Lưu Bài Viết (hoặc một hidden field riêng)
+            const csrfToken = document.querySelector('input[name="_csrf"]').value;
+
+            // Gửi AJAX POST yêu cầu
+            fetch('/post/rate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    postId: postId,
+                    numbStar: rating,
+                    _csrf: csrfToken // Đính kèm CSRF token
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Cập nhật trạng thái hiển thị của các ngôi sao
+                    stars.forEach(star => {
+                        if (parseInt(star.dataset.value) <= rating) {
+                            star.classList.add('selected');
+                        } else {
+                            star.classList.remove('selected');
+                        }
+                    });
+                    document.getElementById('currentRatingValue').textContent = `(${rating} sao)`;
+                    message.textContent = data.message;
+                    message.style.display = 'inline';
+                } else {
+                    alert(`Lỗi: ${data.message}`);
+                }
+            })
+            .catch(err => {
+                alert('Lỗi kết nối server. Vui lòng thử lại.');
+                console.error(err);
+            });
+        }
+    });
+});
 </script>
+<style>
+    /* CSS cho ngôi sao (Cần được đặt trong file CSS hoặc khối style) */
+    .star-rating {
+        display: inline-block;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    .star {
+        color: #ccc; 
+        transition: color 0.2s;
+    }
+    .star.hover, .star.selected {
+        color: gold; 
+    }
+</style>

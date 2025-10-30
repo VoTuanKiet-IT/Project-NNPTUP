@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const User = require('../models/User');
+const ViewLogs = require('../models/ViewLogs');
+const Comment = require('../models/Comment'); 
+const Saved = require('../models/Saved');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { symlink } = require('fs');
@@ -307,12 +310,19 @@ router.route('/edit-post/:id')
 
 // Xóa bài viết
 router.delete('/delete-post/:id', authMiddleware, async (req, res) => {
-  try {
-    await Post.deleteOne({ _id: req.params.id });
-    res.redirect('/admin');
-  } catch (error) {
-    res.status(500).render('error', { message: 'Lỗi máy chủ nội bộ' });
-  }
+    try {
+        await Post.deleteOne({ _id: req.params.id });
+        
+        // Tùy chọn: Xóa các ViewLogs, Comments, SavedPost liên quan
+        await ViewLogs.deleteMany({ postId: req.params.id });
+        await Comment.deleteMany({ postId: req.params.id });
+        await Saved.deleteMany({ postId: req.params.id }); 
+        
+        res.redirect('/admin');
+    } catch (error) {
+        console.error('Lỗi khi xóa bài viết:', error);
+        res.status(500).render('error', { message: 'Lỗi máy chủ nội bộ' });
+    }
 });
 
 module.exports = router;

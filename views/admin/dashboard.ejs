@@ -18,6 +18,7 @@
                 <a href="/edit-post/<%= post._id %>" class="btn">Sửa Post</a>
   
                 <form id="deleteForm_<%= post._id %>" action="/delete-post/<%= post._id %>?_method=DELETE" method="POST">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>"> 
                     <input type="submit" value="Xóa Post" class="btn-delete btn" onclick="confirmDelete('<%= post._id %>')">
                 </form>
             </div>
